@@ -1,29 +1,32 @@
-from connection_and_close import make_connection, close_connection
 from config_db_read import dbconfig_read
+from connection_and_close import make_connection, close_connection
 
 
-def get_films_by_year(year: int, limit: int = None):
+def get_films_by_year(year_from: int, year_to: int = None, limit: int = None):
     connection, cursor = make_connection(dbconfig=dbconfig_read)
     if not connection:
         return []
 
-    if limit is None or limit <= 0:
-        query = """
-            SELECT
-                title, release_year
-            FROM film
-            WHERE release_year = %s;
-        """
-        cursor.execute(query, (year,))
-    else:
-        query = """
-            SELECT
-                title, release_year
-            FROM film
-            WHERE release_year = %s
-            LIMIT %s;
-            """
-        cursor.execute(query, (year, limit))
+    base_query = """
+        SELECT
+            title, release_year
+        FROM film
+        WHERE release_year >= %s
+    """
+
+    params = [year_from]
+
+    if year_to is not None:
+        base_query += " AND release_year <= %s"
+        params.append(year_to)
+
+    base_query += " ORDER BY release_year ASC"
+
+    if limit and limit > 0:
+        base_query += " LIMIT %s"
+        params.append(limit)
+
+    cursor.execute(base_query, tuple(params))
 
     results = cursor.fetchall()
     close_connection(connection, cursor)
@@ -172,6 +175,110 @@ def get_customers_info(country: str, limit: int = None):
             LIMIT %s;
         """
         cursor.execute(query, (country, limit))
+
+    result = cursor.fetchall()
+    close_connection(connection, cursor)
+    return result
+
+
+def get_top_n_customers_by_total_spent(limit: int = None):
+    connection, cursor = make_connection(dbconfig=dbconfig_read)
+    if not connection:
+        return []
+
+    if limit is None or limit <= 0:
+        query = """
+            SELECT
+                cus.first_name, cus.last_name, SUM(p.amount) AS total_spent
+            FROM customer AS cus
+            JOIN payment AS p
+            ON cus.customer_id = p.customer_id
+            GROUP BY cus.customer_id
+            ORDER BY total_spent DESC
+        """
+        cursor.execute(query)
+    else:
+        query = """
+            SELECT
+                cus.first_name, cus.last_name, SUM(p.amount) AS total_spent
+            FROM customer AS cus
+            JOIN payment AS p
+            ON cus.customer_id = p.customer_id
+            GROUP BY cus.customer_id
+            ORDER BY total_spent DESC
+            LIMIT %s;
+        """
+        cursor.execute(query, (limit,))
+
+    result = cursor.fetchall()
+    close_connection(connection, cursor)
+    return result
+
+
+def get_top_n_customers_by_purchase_count(limit: int = None):
+    connection, cursor = make_connection(dbconfig=dbconfig_read)
+    if not connection:
+        return []
+
+    if limit is None or limit <= 0:
+        query = """
+            SELECT
+                cus.first_name, cus.last_name, COUNT(p.payment_id) AS count_payment
+            FROM customer AS cus
+            JOIN payment AS p
+            ON cus.customer_id = p.customer_id
+            GROUP BY cus.customer_id
+            ORDER BY count_payment DESC;
+        """
+        cursor.execute(query)
+    else:
+        query = """
+            SELECT
+                cus.first_name, cus.last_name, COUNT(p.payment_id) AS count_payment 
+            FROM customer AS cus
+            JOIN payment AS p
+            ON cus.customer_id = p.customer_id
+            GROUP BY cus.customer_id
+            ORDER BY count_payment DESC
+            LIMIT %s;
+        """
+        cursor.execute(query, (limit,))
+
+    result = cursor.fetchall()
+    close_connection(connection, cursor)
+    return result
+
+
+def get_top_customers_last_month_by_total_spent(year_month: str, limit: int = None):
+    connection, cursor = make_connection(dbconfig=dbconfig_read)
+    if not connection:
+        return []
+
+    if limit is None or limit <= 0:
+        query = """
+            SELECT
+                cus.first_name, cus.last_name, SUM(p.amount) AS total_spent
+            FROM customer AS cus
+            JOIN payment AS p
+            ON cus.customer_id = p.customer_id
+            WHERE DATE_FORMAT(p.payment_date, "%Y-%m") = %s
+            GROUP BY cus.customer_id
+            ORDER BY total_spent DESC;
+        """
+        cursor.execute(query, (year_month,))
+    else:
+        query = """
+            SELECT
+                cus.first_name, cus.last_name, SUM(p.amount) AS total_spent
+            FROM customer AS cus
+            JOIN payment AS p
+            ON cus.customer_id = p.customer_id
+            WHERE DATE_FORMAT(p.payment_date, "%Y-%m") = %s
+            GROUP BY cus.customer_id
+            ORDER BY total_spent DESC
+            LIMIT %s;
+        """
+        cursor.execute(query, (year_month, limit))
 
     result = cursor.fetchall()
     close_connection(connection, cursor)

@@ -4,6 +4,8 @@ from db_read import (get_films_by_year, get_films_by_genre, get_films_by_year_an
                      get_actor_by_film_title, get_customers_info, get_top_n_customers_by_total_spent,
                      get_top_n_customers_by_purchase_count, get_top_customers_last_month_by_total_spent)
 from db_insert import log_search, get_clear_table
+from plt_top_customers import plot_top_customers_by_months_plt
+from plotly_top_customers import plot_top_customers_by_month_px
 from utils import get_limit
 
 
@@ -21,6 +23,9 @@ def main():
         6 - search top N customers by total spent
         7 - search top N customers by purchase count
         8 - search top N customers last month by total spent
+        9 - plot top customers by month (matplotlib)
+        10 - plot top customers by month (plotly)
+        
         q - for exit program
         """)
         if choice == "0":
@@ -176,6 +181,12 @@ def main():
                 log_search(search_type="top last month", search_value=f"limit={limit}")
             else:
                 print("No payments found for last month")
+
+        elif choice == "9":
+            plot_top_customers_by_months_plt()
+
+        elif choice == "10":
+            plot_top_customers_by_month_px()
 
         elif choice == "q":
             break

@@ -31,5 +31,6 @@ def plot_top_customers_by_month_px():
 
     fig.update_traces(texttemplate='%{text:.2f}', textposition="outside")
     fig.update_layout(xaxis_tickangle=-45)
-
+    print(df)
+    print()
     fig.show()

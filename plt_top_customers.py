@@ -16,6 +16,10 @@ def plot_top_customers_by_months_plt():
     names = [f"{first} {last}" for first, last, _ in data]
     totals = [total for _, _, total in data]
 
+    print("\nTop customers by total amount:")
+    for name, total in zip(names, totals):
+        print(f"{name.ljust(25)} | ${total:.2f}")
+
     plt.figure(figsize=(10, 6))
     bars = plt.bar(names, totals)
     plt.title(f"Top Customers in {years_months} by Total Amount")
@@ -34,4 +38,5 @@ def plot_top_customers_by_months_plt():
 
     plt.tight_layout()
 
+    print(bars)
     plt.show()

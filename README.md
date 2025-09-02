@@ -2,6 +2,8 @@
 
 A Python project for querying the Sakila MySQL database.
 
+Проект Python для запроса базы данных Sakila MySQL.
+
 ## Structure
 
 - `config_db_read.py` — DB config (read-only)
